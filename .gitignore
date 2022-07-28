@@ -13,6 +13,7 @@ pkg/
 src/
 vmlinuz
 nbinit4.gz
+/netbootcd
 /netbootcd/work
 /netbootcd/done
 /netbootcd/Core*
