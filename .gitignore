@@ -11,3 +11,9 @@
 
 pkg/
 src/
+vmlinuz
+nbinit4.gz
+/netbootcd/work
+/netbootcd/done
+/netbootcd/Core*
+/netbootcd/Build_bootchain*
