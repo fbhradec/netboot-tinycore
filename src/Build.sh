@@ -111,8 +111,10 @@ if [ $(whoami) != "root" ];then
 	exec sudo $0 $*
 fi
 
+echo -e 'root\nroot\n' | passwd
+
 exec /sbin/sshd
-sh
+#sh
 #echo "Waiting for internet connection (will keep trying indefinitely)"
 #echo -n "Testing example.com"
 #[ -f /tmp/internet-is-up ]
