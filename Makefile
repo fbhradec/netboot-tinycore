@@ -29,11 +29,11 @@ ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 all:
 	if [ "$$(grep Debian /etc/os-release)" == "" ] ; then \
-		docker build . -t netbootcd-ipxe-bootchain-build ;\
+		docker build . -f src/Dockerfile -t netbootcd-ipxe-bootchain-build ;\
 		docker run --rm --privileged=true -v $(ROOT_DIR):$(ROOT_DIR) netbootcd-ipxe-bootchain-build /bin/bash -c 'cd $(ROOT_DIR) && make UID=$(UID) GID=$(GID)' ;\
 	else \
 		apt install -y zip dosfstools syslinux-utils genisoimage ;\
-		cat $(ROOT_DIR)/Build.sh \
+		cat $(ROOT_DIR)/src/Build.sh \
 			| sed 's/__COREVER__/$(COREVER)/g' \
 			| sed 's/__EXTRA_PKGS__/$(EXTRA_PKGS)/g' \
 		> $(ROOT_DIR)/netbootcd/Build_bootchain.sh &&\
@@ -41,26 +41,27 @@ all:
 		cd $(ROOT_DIR)/netbootcd &&\
 		./Build_bootchain.sh &&\
 		cd $(ROOT_DIR) &&\
-		cp -rfv $(ROOT_DIR)/netbootcd/done/vmlinuz $(ROOT_DIR)/ &&\
-		cp -rfv $(ROOT_DIR)/netbootcd/done/nbinit4.gz $(ROOT_DIR)/ &&\
+		mkdir -p $(ROOT_DIR)/boot/http/ && \
+		cp -rfv $(ROOT_DIR)/netbootcd/done/vmlinuz $(ROOT_DIR)/boot/ &&\
+		cp -rfv $(ROOT_DIR)/netbootcd/done/nbinit4.gz $(ROOT_DIR)/boot/ &&\
+		cp -rfv $(ROOT_DIR)/example/* $(ROOT_DIR)/boot/http/ &&\
 		if [ "$$(mount | grep tcisomnt)" != "" ] ; then\
 		 	umount $(ROOT_DIR)/netbootcd/work/tcisomnt ; \
 		fi ;\
+		rm -rf $(ROOT_DIR)/netbootcd/Build_bootchain.sh ;\
 		chmod a+xwr -R $(ROOT_DIR)/netbootcd/work ; \
 		chown -R $(UID):$(GID) $(ROOT_DIR)/netbootcd/work ;\
 		chown -R $(UID):$(GID) $(ROOT_DIR)/netbootcd/done ;\
 		chown -R $(UID):$(GID) $(ROOT_DIR)/netbootcd/Core* ;\
-		chown -R $(UID):$(GID) $(ROOT_DIR)/netbootcd/Build_bootchain* ;\
-		chown -R $(UID):$(GID) $(ROOT_DIR)/nbinit4.gz ;\
-		chown -R $(UID):$(GID) $(ROOT_DIR)/vmlinuz ;\
+		chown -R $(UID):$(GID) $(ROOT_DIR)/boot ;\
 	fi
 
 clean:
 	rm -rf \
-		nbinit4.gz vmlinuz \
-		./netbootcd/work \
-		./netbootcd/done \
-		./netbootcd/Core* \
-		./netbootcd/Build_bootchain.sh
+		$(ROOT_DIR)/boot \
+		$(ROOT_DIR)/netbootcd/work \
+		$(ROOT_DIR)/netbootcd/done \
+		$(ROOT_DIR)/netbootcd/Core* \
+		$(ROOT_DIR)/netbootcd/Build_bootchain.sh
 
 #include $(GRUB_ROOT_DIR)Makefile
