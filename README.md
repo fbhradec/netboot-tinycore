@@ -12,3 +12,20 @@ Within this environment we can do clever things, like for example:
     * make a copy of the actual boot image file from the network storage to a local disk cache and boot from it, instead of using NBD, iSCSI or NFS to load the image directly from the network storage.
 
 Associated with iPXE, netbootcd-ipxe-bootchain is a very useful and effective way to remotely administer bare metal computers boot process.
+
+## Build
+
+Just run `make` and it should build it using docker.
+After the build, you should find tinycore kernel and initrd inside ./boot/ folder.
+In ./boot/ you will also find a messy init.sh example script that can be used by passing `nb_provisionurl=<tftp/http url>/init.sh` parameter to the kernel.
+
+An example of a grub menu option, assuming we have a tftp server at 192.168.0.1, serving this git depot as tftp root:
+```
+menuentry 'netbootcd-ipxe-bootchain' --class os {
+     echo Reading kernel
+     linux  boot/vmlinuz  quiet nb_provisionurl=tftp://192.168.0.1/boot/http/init.sh nofstab waitusb norestore base console=tty0 console=ttyS0,115200n8
+     echo Reading ramdisk
+     initrd boot/nbinit4.gz
+     echo booting...
+}
+```
