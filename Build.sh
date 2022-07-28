@@ -26,30 +26,10 @@ NBINIT=${WORK}/nbinit #for CD/USB
 
 #Set to false to not build floppy images
 FLOPPY=true
-NBCDVER=13.1
-COREVER=13.1
+NBCDVER=__COREVER__
+COREVER=__COREVER__
 
-EXTRA_PKGS="
-	avahi.tcz
-	dbus.tcz
-	expat2.tcz
-	gcc_libs.tcz
-	glib2.tcz
-	libavahi.tcz
-	libdaemon.tcz
-	libffi.tcz
-	liblvm2.tcz
-	libpci.tcz
-	ncursesw.tcz
-	nss-mdns.tcz
-	openssh.tcz
-	openssl-1.1.1.tcz
-	parted.tcz
-	pci-utils.tcz
-	readline.tcz
-	sc101-nbd.tcz
-	udev-lib.tcz
-"
+EXTRA_PKGS=__EXTRA_PKGS__
 
 COREVER_GENERIC=$(echo $COREVER | awk -F'.' '{print $1".x"}')
 if [ ! -f CorePlus-$COREVER.iso ];then
