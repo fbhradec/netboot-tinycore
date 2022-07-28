@@ -32,8 +32,8 @@ GID=$(shell id -g)
 
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-all: build_docker_image_and_run
-build_docker_image_and_run: git_update_submodule
+all: netbootcd/README build_docker_image_and_run
+build_docker_image_and_run:
 	cd $(ROOT_DIR)/src/ &&\
 	docker build . -t netbootcd-ipxe-bootchain-build &&\
 	docker run \
@@ -61,7 +61,7 @@ patch_nbscript_sh:
 		| sed 's/wget -O /curl -L -O /g' \
 	> $(ROOT_DIR)/netbootcd/nbscript.sh
 
-git_update_submodule:
+netbootcd/README:
 	cd $(ROOT_DIR)/ && \
 	git pull --recurse-submodules && \
 	git submodule update --init && \
