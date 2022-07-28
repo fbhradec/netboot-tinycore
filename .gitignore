@@ -10,7 +10,7 @@
 *.sig
 
 pkg/
-src/
+boot/
 vmlinuz
 nbinit4.gz
 /netbootcd
