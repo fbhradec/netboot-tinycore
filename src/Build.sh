@@ -111,9 +111,9 @@ if [ $(whoami) != "root" ];then
 	exec sudo $0 $*
 fi
 
-echo -e 'root\nroot\n' | passwd
+echo -e 't\nt\n' | passwd >/dev/null 2>&1
+exec /usr/local/sbin/sshd
 
-exec /sbin/sshd
 #sh
 #echo "Waiting for internet connection (will keep trying indefinitely)"
 #echo -n "Testing example.com"
@@ -123,6 +123,7 @@ exec /sbin/sshd
 #	echo -n "."
 #	wget --spider http://www.example.com &> /dev/null
 #done
+
 echo > /tmp/internet-is-up
 
 if [ -x /tmp/nbscript.sh ];then
@@ -155,18 +156,43 @@ tar -C ${NBINIT} -xvf kexec.tgz
 
 echo "if ! which startx;then netboot;else sleep 5;echo \*\* Type \"netboot\" and press enter to launch the NetbootCD main menu. \*\*;fi" >> ${NBINIT}/etc/skel/.profile
 
+# download and install extra packages
+mkdir -p ${WORK}/extra
+cd ${WORK}/extra
+for n in $EXTRA_PKGS ; do
+	echo "Downloading package $n..."
+	curl -L -O -C - "http://www.tinycorelinux.net/$COREVER_GENERIC/x86/tcz/$n"
+	if [ $? -ne 0 ] ; then
+		echo "ERROR: Can't download package $n"
+		exit -1
+	fi
+done
+for i in $EXTRA_PKGS;do
+	unsquashfs $i
+	if [ $? -ne 0 ] ; then
+		echo "ERROR: Can't install package $n"
+		exit -1
+	fi
+find squashfs-root/ -type f
+	cp -a squashfs-root/* ${NBINIT}
+	rm -r squashfs-root
+done
+cd ${WORK}/../
+
 #Add pxe-kexec to nbinit, if it exists in this folder
 if [ -f pxe-kexec/pxe-kexec.tgz ] && [ -f pxe-kexec/readline.tcz ] && \
    [ -f pxe-kexec/curl.tcz ] && [ -f pxe-kexec/openssl.tcz ] && \
    [ -f pxe-kexec/libgcrypt.tcz ] && [ -f pxe-kexec/libgpg-error.tcz ] && \
    [ -f pxe-kexec/libidn.tcz ] && [ -f pxe-kexec/libssh2.tcz ];then
-	mkdir ${WORK}/pxe-kexec
+	mkdir -p ${WORK}/pxe-kexec
 	tar -C ${WORK}/pxe-kexec -xf pxe-kexec/pxe-kexec.tgz # an extra utility
-	for i in readline.tcz curl.tcz openssl.tcz libgcrypt.tcz libgpg-error.tcz libidn.tcz libssh2.tcz;do #dependencies of pxe-kexec
+	for i in readline.tcz curl.tcz openssl.tcz libgcrypt.tcz libgpg-error.tcz libidn.tcz libssh2.tcz ;do #dependencies of pxe-kexec
+		echo "Installing $i..."
 		unsquashfs pxe-kexec/$i
 		cp -a squashfs-root/* ${WORK}/pxe-kexec
 		rm -r squashfs-root
 	done
+	ls -l ${WORK}/pxe-kexec/
 	#workaround for libraries
 	mkdir ${WORK}/pxe-kexec/usr/lib
 	for i in ${WORK}/pxe-kexec/usr/local/lib/*;do
@@ -182,17 +208,6 @@ else
 	sleep 2
 fi
 
-# download extra packages
-mkdir -p ${NBINIT}/extra/
-cd ${NBINIT}/extra/
-for n in $EXTRA_PKGS ; do
-	echo "Downloading package $n..."
-	curl -L -O "http://www.tinycorelinux.net/$COREVER_GENERIC/x86/tcz/$n"
-	if [ $? -ne 0 ] ; then
-		echo "ERROR: Can't download package $n"
-		exit -1
-	fi
- done
 
 
 cd ${NBINIT}
