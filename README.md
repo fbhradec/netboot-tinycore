@@ -1,6 +1,6 @@
 # netbootcd-ipxe-bootchain
 
-A modified version of the amazing IsaacSchemm/netbootcd to be booted over iPXE, without internet, and bootchain a linux image distro over the network. 
+A modified version of the amazing [IsaacSchemm/netbootcd](https://github.com/IsaacSchemm/netbootcd) to be booted over iPXE, without internet, and bootchain a linux image distro over the network. 
 
 The main reason netbootcd-ipxe-bootchain exists is to bootstrap a linux environment quickly, to extract the kernel and ramdisk from inside the actual boot image, and use kexec to boot it. 
 
