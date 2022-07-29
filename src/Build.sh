@@ -111,6 +111,8 @@ if [ $(whoami) != "root" ];then
 	exec sudo $0 $*
 fi
 
+clear
+
 echo -e 't\nt\n' | passwd >/dev/null 2>&1
 
 # setup sshd
@@ -118,10 +120,10 @@ mkdir -p /var/lib/sshd
 cp /usr/local/etc/ssh/ssh_config.orig /usr/local/etc/ssh/ssh_config
 cp /usr/local/etc/ssh/sshd_config.orig /usr/local/etc/ssh/sshd_config
 echo "PermitRootLogin	yes" >> /usr/local/etc/ssh/sshd_config
-/usr/local/etc/init.d/openssh start
+/usr/local/etc/init.d/openssh start >/tmp/sshd.log 2>&1
 
 # start avahi
-/usr/local/etc/init.d/avahi start
+#/usr/local/etc/init.d/avahi start
 
 
 #sh
@@ -138,8 +140,8 @@ echo > /tmp/internet-is-up
 
 if [ -x /tmp/nbscript.sh ];then
 	/tmp/nbscript.sh
-#else
-#	/usr/bin/nbscript.sh
+else
+	/usr/bin/nbscript.sh
 fi
 sh
 echo "Type \"netboot\" to return to the menu."
