@@ -112,7 +112,12 @@ if [ $(whoami) != "root" ];then
 fi
 
 echo -e 't\nt\n' | passwd >/dev/null 2>&1
-exec /usr/local/sbin/sshd
+
+# setup sshd
+cp /usr/local/etc/ssh/ssh_config.orig /usr/local/etc/ssh/ssh_config
+cp /usr/local/etc/ssh/sshd_config.orig /usr/local/etc/ssh/sshd_config
+echo "PermitRootLogin	yes" >> /usr/local/etc/ssh/sshd_config
+/usr/local/etc/init.d/openssh start
 
 #sh
 #echo "Waiting for internet connection (will keep trying indefinitely)"
