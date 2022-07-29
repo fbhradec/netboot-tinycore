@@ -119,6 +119,10 @@ cp /usr/local/etc/ssh/sshd_config.orig /usr/local/etc/ssh/sshd_config
 echo "PermitRootLogin	yes" >> /usr/local/etc/ssh/sshd_config
 /usr/local/etc/init.d/openssh start
 
+# start avahi
+/usr/local/etc/init.d/avahi start
+
+
 #sh
 #echo "Waiting for internet connection (will keep trying indefinitely)"
 #echo -n "Testing example.com"
