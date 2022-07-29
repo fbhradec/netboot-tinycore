@@ -92,3 +92,4 @@ clean:
 		$(ROOT_DIR)/netbootcd/done \
 		$(ROOT_DIR)/netbootcd/Core* \
 		$(ROOT_DIR)/netbootcd/Build_bootchain.sh
+	cd netbootcd && git checkout -f
