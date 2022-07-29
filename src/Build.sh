@@ -126,25 +126,17 @@ echo "PermitRootLogin	yes" >> /usr/local/etc/ssh/sshd_config
 #/usr/local/etc/init.d/avahi start
 
 
-#sh
-#echo "Waiting for internet connection (will keep trying indefinitely)"
-#echo -n "Testing example.com"
-#[ -f /tmp/internet-is-up ]
-#while [ $? != 0 ];do
-#	sleep 1
-#	echo -n "."
-#	wget --spider http://www.example.com &> /dev/null
-#done
-
 echo > /tmp/internet-is-up
 
+# run default netbootcd init script
 if [ -x /tmp/nbscript.sh ];then
 	/tmp/nbscript.sh
 else
 	/usr/bin/nbscript.sh
 fi
+ifconfig
+echo "ERROR: nbscript.sh failed to run. Dropping to a shell!"
 sh
-echo "Type \"netboot\" to return to the menu."
 EOF
 chmod +x ${NBINIT}/usr/bin/netboot
 #patch /etc/init.d/tc-config
