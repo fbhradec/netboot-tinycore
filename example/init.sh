@@ -97,7 +97,7 @@ getKernelFromNBD() {
 	mount -o ro /dev/nbd0p2 /tmp/boot
 #	cp -v $(ls -l /tmp/boot/vmlinuz-* | sort -V | tail -1 | awk '{print $(NF)}') ./kernel
 #	cp -v $(ls -l /tmp/boot/initr*$(ls -l /tmp/boot/vmlinuz-* | sort -V | tail -1 | awk '{print $(NF)}' | awk -F'-' '{print $2}')* | awk '{print $(NF)}') ./initrd
-	# now mount 
+	# now mount
 	#mkdir -p /tmp/root
 	#mount /dev/loop30p3 /tmp/root
 	#echo "/dev/nbd0p3	/		ext4	defaults			1 1" >  /mnt/root/fstab
@@ -122,42 +122,41 @@ elif [ $DISTRO = "fedora34" ] ; then
 #elif [ $DISTRO = "debian11" ] ; then
 elif [ $DISTRO = "fedora35" ] ; then
 	if [ "$(dmesg | egrep 'Hyp|base_baud')" != "" ] ; then
-		export kvm=" console=tty console=tty0 console=ttyS0,115200n8 "
+		export kvm=" console=ttyS0,115200n8 console=tty console=tty0 "
 	fi
 	disk=disk1
 	getKernel $disk
 	if [ -e /sys/firmware/efi/systab ] ; then
 		efi="acpi_rsdp=$(sudo grep -m1 ^ACPI /sys/firmware/efi/systab | cut -f2- -d=)"
-		echo $efi
+		# echo $efi
 	fi
 	#kexec -l /home/tc/kernel --initrd=/home/tc/initrd --append='root=/dev/nbd0 netroot=nbd:'$NETBOOT_SERVER':'$disk':none:defaults,rw,noatime:--timeout=0,-p,-s,-systemd-mark  ip=dhcp ro systemd.debug-shell=1 net.ifnames=0 biosdevname=0 audit=0 selinux=0 quiet rd.luks=0 rd.lvm=0 rd.md=0 rd.dm=0 rd.skipfsck rd.info rd.fstab=0 quiet modprobe.blacklist=nouveau  console=tty0  console=ttyS0,115200n8 tftp=192.168.1.231  '$efi' reboot=acpi systemd.mask=NetworkManager systemd.mask=firewalld systemd.mask=firewall systemd.mask=docker systemd.mask=systemd-zram-setup@zram0 systemd.mask=systemd-zram-setup fsck.mode=skip rcutree.rcu_idle_gp_delay=1 mem_encrypt=off pci=nocrs,noearly audit=0 selinux=0 panic=30 fastboot ' 2>/dev/null
 #		rhgb
 #		overlay=/tmp/nbd1
-#		console=tty console=tty0 console=ttyS0,115200n8 
+#		console=tty console=tty0 console=ttyS0,115200n8
 
 
 	cmdline=$(echo 'root=/dev/nbd0 netroot=nbd:'$NETBOOT_SERVER':'$disk':none:defaults,rw,noatime:  rd.shell=1
 		modprobe.blacklist=nouveau
 		ip=dhcp
-		rw systemd.debug-shell=1   tftp=192.168.1.231 
-		net.ifnames=0 biosdevname=0 audit=0 selinux=0 
-		rd.luks=0 rd.lvm=0 rd.md=0 rd.dm=0 rd.skipfsck=0 rd.info=1 rd.fstab=0 fsck.mode=skip 
-		'$efi' reboot=acpi 
-		systemd.mask=firewalld 
-		systemd.mask=firewall 
-		systemd.mask=docker 
-		systemd.mask=systemd-zram-setup@zram0 
-		systemd.mask=systemd-zram-setup 
-		systemd.mask=NetworkManager 
-		systemd.mask=lvm2-monitor 
-		systemd.mask=abrt-desktop 
-		systemd.mask=abrt-cli 
-		systemd.mask=abrt 
-		rcutree.rcu_idle_gp_delay=1 mem_encrypt=off pci=nocrs,noearly 
+		rw systemd.debug-shell=1   tftp=192.168.1.231
+		net.ifnames=0 biosdevname=0 audit=0 selinux=0
+		rd.luks=0 rd.lvm=0 rd.md=0 rd.dm=0 rd.skipfsck=0 rd.info=1 rd.fstab=0 fsck.mode=skip
+		'$efi' reboot=acpi
+		systemd.mask=firewalld
+		systemd.mask=firewall
+		systemd.mask=docker
+		systemd.mask=systemd-zram-setup@zram0
+		systemd.mask=systemd-zram-setup
+		systemd.mask=NetworkManager
+		systemd.mask=lvm2-monitor
+		systemd.mask=abrt-desktop
+		systemd.mask=abrt-cli
+		systemd.mask=abrt
+		rcutree.rcu_idle_gp_delay=1 mem_encrypt=off pci=nocrs,noearly
 		quiet '$kvm'
 	' | tr -d '\n')
 	kexec -l /home/tc/kernel --initrd=/home/tc/initrd --append="$cmdline" 2>/dev/null
 #	sh
 	kexec -e
 fi
-

@@ -125,7 +125,6 @@ echo "PermitRootLogin	yes" >> /usr/local/etc/ssh/sshd_config
 # start avahi
 #/usr/local/etc/init.d/avahi start
 
-
 echo > /tmp/internet-is-up
 
 # run default netbootcd init script
