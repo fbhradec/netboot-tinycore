@@ -58,7 +58,7 @@ patch_build_sh: src/Build.sh
 patch_nbscript_sh:
 	cp $(ROOT_DIR)/netbootcd/nbscript.sh /dev/shm &&\
 	cat /dev/shm/nbscript.sh \
-		| sed 's/wget -O /curl -L -O /g' \
+		| sed 's/wget -O /curl -L -o /g' \
 	> $(ROOT_DIR)/netbootcd/nbscript.sh
 
 netbootcd/README:

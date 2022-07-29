@@ -114,6 +114,7 @@ fi
 echo -e 't\nt\n' | passwd >/dev/null 2>&1
 
 # setup sshd
+mkdir -p /var/lib/sshd
 cp /usr/local/etc/ssh/ssh_config.orig /usr/local/etc/ssh/ssh_config
 cp /usr/local/etc/ssh/sshd_config.orig /usr/local/etc/ssh/sshd_config
 echo "PermitRootLogin	yes" >> /usr/local/etc/ssh/sshd_config
@@ -137,9 +138,10 @@ echo > /tmp/internet-is-up
 
 if [ -x /tmp/nbscript.sh ];then
 	/tmp/nbscript.sh
-else
-	/usr/bin/nbscript.sh
+#else
+#	/usr/bin/nbscript.sh
 fi
+sh
 echo "Type \"netboot\" to return to the menu."
 EOF
 chmod +x ${NBINIT}/usr/bin/netboot
