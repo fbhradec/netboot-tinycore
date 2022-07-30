@@ -135,6 +135,7 @@ elif [ $DISTRO = "fedora35" ] ; then
 #		overlay=/tmp/nbd1
 #		console=tty console=tty0 console=ttyS0,115200n8
 
+#	debug=" rd.debug rd.shell rd.break=pre-mount rd.break=mount "
 
 	cmdline=$(echo 'root=/dev/nbd0 netroot=nbd:'$NETBOOT_SERVER':'$disk':none:defaults,rw,noatime:  rd.shell=1
 		modprobe.blacklist=nouveau
@@ -154,9 +155,10 @@ elif [ $DISTRO = "fedora35" ] ; then
 		systemd.mask=abrt-cli
 		systemd.mask=abrt
 		rcutree.rcu_idle_gp_delay=1 mem_encrypt=off pci=nocrs,noearly
+		'$debug'
 		quiet '$kvm'
 	' | tr -d '\n')
 	kexec -l /home/tc/kernel --initrd=/home/tc/initrd --append="$cmdline" 2>/dev/null
-#	sh
+	#sh
 	kexec -e
 fi
