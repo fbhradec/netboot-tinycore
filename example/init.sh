@@ -136,7 +136,7 @@ elif [ $DISTRO = "fedora35" ] ; then
 #		console=tty console=tty0 console=ttyS0,115200n8
 
 #	debug=" rd.debug rd.shell rd.break=pre-mount rd.break=mount "
-	cache_name=$(cat /proc/cmdline | sed 's/ /\n/g' | grep cache_label | awk  -F'=' '{print $2}')
+	cache_name=$(echo $(cat /proc/cmdline) | sed 's/ /\n/g' | grep cache_label | awk  -F'=' '{print $2}')
     	if [ "$cache_name" == "" ] ; then
         	cache_name=CACHE
     	fi
@@ -163,7 +163,7 @@ elif [ $DISTRO = "fedora35" ] ; then
 		'$debug'
 		quiet '$kvm'
 	' | tr -d '\n')
-	kexec -l /home/tc/kernel --initrd=/home/tc/initrd --append="$cmdline" 2>/dev/null
+	kexec -l /home/tc/kernel --initrd=/home/tc/initrd --append="$(echo $cmdline)" 2>/dev/null
 	#sh
 	kexec -e
 fi
