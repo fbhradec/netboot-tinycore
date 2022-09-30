@@ -1,3 +1,10 @@
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+$(info $(ROOT_DIR))
+
+PXE_TFTP:=192.168.1.231
+NETBOOT_IMG_PATH:=$(shell dirname `readlink -f $(ROOT_DIR)` | sed 's/\//\\\//g')
+$(info $(NETBOOT_IMG_PATH))
+#"/root/docker/pxe-manager/tftp"
 
 # retrieve the latest tinycore version available from their website.
 COREVER=$(shell curl 'http://www.tinycorelinux.net/downloads.html' | grep 'Version ' | awk -F'Version ' '{print $$2}' | awk '{print $$1}')
@@ -30,23 +37,27 @@ EXTRA_PKGS="\
 UID=$(shell id -u)
 GID=$(shell id -g)
 
-ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+all: $(ROOT_DIR)/netbootcd/README $(ROOT_DIR)/boot/init.sh $(ROOT_DIR)/boot/vmlinuz
 
-all: netbootcd/README build_docker_image_and_run
-build_docker_image_and_run:
+
+$(ROOT_DIR)/.build_docker_image: $(ROOT_DIR)/src/Dockerfile
 	cd $(ROOT_DIR)/src/ &&\
-	docker build . -t netbootcd-ipxe-bootchain-build &&\
+	docker build . -t netbootcd-ipxe-bootchain-build && \
+	touch $(ROOT_DIR)/.build_docker_image
+
+$(ROOT_DIR)/.run_docker_image: $(ROOT_DIR)/.build_docker_image $(ROOT_DIR)/src/Build.sh
 	docker run \
 		--rm \
 		--privileged=true \
 		-v $(ROOT_DIR):$(ROOT_DIR) \
 		netbootcd-ipxe-bootchain-build \
-		/bin/bash -c 'cd $(ROOT_DIR) && make UID=$(UID) GID=$(GID) docker_build'
+		/bin/bash -c 'cd $(ROOT_DIR) && make UID=$(UID) GID=$(GID) docker_build' && \
+	touch $(ROOT_DIR)/.run_docker_image
 
 # we use our custom src/Build.sh file to create a Build_bootchain.sh
 # script on netbootcd. Here we setup the tinycore version and extra_pkgs
 # that will be download and pre-installed.
-patch_build_sh: src/Build.sh
+$(ROOT_DIR)/netbootcd/Build_bootchain.sh: $(ROOT_DIR)/src/Build.sh
 	cat $(ROOT_DIR)/src/Build.sh \
 		| sed 's/__COREVER__/$(COREVER)/g' \
 		| sed 's/__EXTRA_PKGS__/$(EXTRA_PKGS)/g' \
@@ -55,19 +66,27 @@ patch_build_sh: src/Build.sh
 
 # we replace wget by curl on nbscript, so we can also
 # use tftp to download nb_provisionurl script with tftp://
-patch_nbscript_sh:
+$(ROOT_DIR)/netbootcd/nbscript.sh:
 	cp $(ROOT_DIR)/netbootcd/nbscript.sh /dev/shm &&\
 	cat /dev/shm/nbscript.sh \
 		| sed 's/wget -O /curl -L -o /g' \
 	> $(ROOT_DIR)/netbootcd/nbscript.sh
 
-netbootcd/README:
+$(ROOT_DIR)/boot/init.sh: $(ROOT_DIR)/src/init.sh
+	cp $(ROOT_DIR)/src/init.sh /dev/shm && \
+	cat /dev/shm/init.sh \
+		| sed "s/__PXE_TFTP__/$(PXE_TFTP)/g" \
+		| sed "s/__NETBOOT_IMG_PATH__/$(NETBOOT_IMG_PATH)/g" \
+	> $(ROOT_DIR)/boot/init.sh
+
+$(ROOT_DIR)/netbootcd/README:
 	cd $(ROOT_DIR)/ && \
 	git pull --recurse-submodules && \
 	git submodule update --init && \
 	git submodule update --recursive
 
-docker_build: patch_build_sh patch_nbscript_sh
+
+docker_build: $(ROOT_DIR)/netbootcd/Build_bootchain.sh $(ROOT_DIR)/netbootcd/nbscript.sh $(ROOT_DIR)/boot/init.sh
 	cd $(ROOT_DIR)/netbootcd &&\
 	./Build_bootchain.sh && \
 	cd $(ROOT_DIR) &&\
@@ -85,11 +104,14 @@ docker_build: patch_build_sh patch_nbscript_sh
 	chown -R $(UID):$(GID) $(ROOT_DIR)/netbootcd/Core* ;\
 	chown -R $(UID):$(GID) $(ROOT_DIR)/boot
 
+$(ROOT_DIR)/boot/vmlinuz: $(ROOT_DIR)/netbootcd/Build_bootchain.sh $(ROOT_DIR)/.run_docker_image
+
 clean:
 	rm -rf \
 		$(ROOT_DIR)/boot \
 		$(ROOT_DIR)/netbootcd/work \
 		$(ROOT_DIR)/netbootcd/done \
 		$(ROOT_DIR)/netbootcd/Core* \
+		$(ROOT_DIR)/.*docker* \
 		$(ROOT_DIR)/netbootcd/Build_bootchain.sh
 	cd netbootcd && git checkout -f

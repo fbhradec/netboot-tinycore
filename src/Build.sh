@@ -1,6 +1,6 @@
 #!/bin/sh
-#Build.sh 11.1 for netbootcd
 
+#Build.sh 11.1 for netbootcd
 ## This program is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License
 ## as published by the Free Software Foundation; either version 2
@@ -18,6 +18,7 @@
 ## The full text of the GNU GPL, versions 2 or 3, can be found at
 ## <http://www.gnu.org/copyleft/gpl.html> or on the CD itself.
 
+
 set -e
 PATH=$PATH:/sbin
 WORK=$(pwd)/work
@@ -34,6 +35,10 @@ EXTRA_PKGS=__EXTRA_PKGS__
 COREVER_GENERIC=$(echo $COREVER | awk -F'.' '{print $1".x"}')
 if [ ! -f CorePlus-$COREVER.iso ];then
 	wget http://www.tinycorelinux.net/$COREVER_GENERIC/x86/release/CorePlus-$COREVER.iso --no-check-certificate
+#	wget http://www.tinycorelinux.net/$COREVER_GENERIC/x86_64/release/TinyCorePure64-$COREVER.iso --no-check-certificate
+#        mv TinyCorePure64-$COREVER.iso CorePlus-$COREVER.iso
+#	wget http://www.tinycorelinux.net/$COREVER_GENERIC/x86_64/release/CorePure64-$COREVER.iso --no-check-certificate
+#        mv CorePure64-$COREVER.iso CorePlus-$COREVER.iso
 fi
 
 NO=0
@@ -90,7 +95,9 @@ umount ${WORK}/tcisomnt
 rmdir ${WORK}/tcisomnt
 
 #Copy kernel - Core 5.0+ already built with kexec
-cp ${TCISO}/boot/vmlinuz ${DONE}/vmlinuz
+ls -l ${TCISO}/
+ls -l ${TCISO}/boot/
+cp ${TCISO}/boot/vmlinuz ${DONE}/vmlinuz || cp ${TCISO}/boot/vmlinuz64 ${DONE}/vmlinuz
 chmod +w ${DONE}/vmlinuz
 
 #Make nbinit4.gz. NetbootCD itself won't use any separate TCZ files. It will all be in the initrd.
@@ -102,7 +109,7 @@ mkdir ${NBINIT}
 FDIR=$(pwd)
 cd ${NBINIT}
 echo "Extracting..."
-gzip -cd ${TCISO}/boot/core.gz | cpio -id
+gzip -cd ${TCISO}/boot/core*.gz | cpio -id
 cd -
 #write wrapper script
 cat > ${NBINIT}/usr/bin/netboot << "EOF"
@@ -228,8 +235,8 @@ if [ -d ${WORK}/iso ];then
 fi
 mkdir -p ${WORK}/iso/boot/isolinux
 
-cp ${TCISO}/boot/isolinux/isolinux.bin ${WORK}/iso/boot/isolinux #get ISOLINUX from the TinyCore disc
-cp ${TCISO}/boot/isolinux/menu.c32 ${WORK}/iso/boot/isolinux #get menu.c32 from the TinyCore disc
+cp ${TCISO}/boot/isolinux/* ${WORK}/iso/boot/isolinux #get ISOLINUX from the TinyCore disc
+#cp ${TCISO}/boot/isolinux/menu.c32 ${WORK}/iso/boot/isolinux #get menu.c32 from the TinyCore disc
 
 for i in vmlinuz nbinit4.gz;do
 	cp ${DONE}/$i ${WORK}/iso/boot
@@ -277,8 +284,8 @@ isohybrid ${DONE}/NetbootCD-$NBCDVER.iso
 
 ln -s ${DONE}/NetbootCD-$NBCDVER.iso ${DONE}/NetbootCD.iso
 
-cp -r ${TCISO}/cde ${WORK}/iso
-cp ${TCISO}/boot/core.gz ${WORK}/iso/boot
+#cp -r ${TCISO}/cde ${WORK}/iso
+cp ${TCISO}/boot/core.gz ${WORK}/iso/boot || cp ${TCISO}/boot/corepure64.gz ${WORK}/iso/boot/core.gz
 
 echo "DEFAULT menu.c32
 PROMPT 0
