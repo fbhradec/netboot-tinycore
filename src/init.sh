@@ -2,6 +2,7 @@
 
 NETBOOT_SERVER=__PXE_TFTP__
 NETBOOT_IMG_PATH="__NETBOOT_IMG_PATH__"
+KERNEL=5
 
 debug() {
 	# install ssh and start it!
@@ -64,27 +65,9 @@ getKernel() {
 	# mount boot partition and copy kernel+initrd
 	mkdir -p /tmp/xx/
 	mount -o ro /dev/loop30 /tmp/xx
-	vmlinuz=$(ls -rt /tmp/xx/boot/vmlinuz-* |  tail -n 1)
+	vmlinuz=$(ls -rt /tmp/xx/boot/vmlinuz-$KERNEL* |  tail -n 1)
 	cp -v $vmlinuz ./kernel
 	cp -v $(ls -l /tmp/xx/boot/initr*$(echo $vmlinuz | awk -F'-' '{print $2}')* | awk '{print $(NF)}') ./initrd
-	# now mount root and patch fstab if needed (fix image on first boot!)
-	# mkdir -p /tmp/root
-	# mount -o ro /dev/loop30p3 /tmp/root
-	#if [ "$(grep 'nbd0 ' /tmp/xx/etc/fstab)" == "" ] ; then
-	#	mount -o remount,rw  /tmp/xx/
-	#	echo "/dev/nbd0	/		ext4	defaults			1 1" >  /tmp/xx/etc/fstab
-	#	#echo "/dev/nbd0p2	/boot		ext4	defaults			1 2" >> /tmp/xx/etc/fstab
-	#	#echo "/dev/nbd0p1	/boot/efi	vfat	umask=0077,shortname=winnt	0 2" >> /tmp/xx/etc/fstab
-
-	#        echo -e "\n[ipv4]" >> /etc/NetworkManager/NetworkManager.conf
-        #	echo "never-default=true" >> /etc/NetworkManager/NetworkManager.conf
-	#	mount -o remount,ro /tmp/xx/
-	#fi
-        #if [ ! -e /etc/sysconfig/readonly-root ] ; then
-        #        mount -o remount,rw  /tmp/xx/
-        #        echo "READONLY=yes" > /etc/sysconfig/readonly-root
-        #        mount -o remount,ro  /tmp/xx/
-        #fi
 	umountBoot
 }
 
@@ -131,7 +114,7 @@ elif [ $DISTRO = "fedora35" ] ; then
 		efi="acpi_rsdp=$(sudo grep -m1 ^ACPI /sys/firmware/efi/systab | cut -f2- -d=)"
 		# echo $efi
 	fi
-	#kexec -l /home/tc/kernel --initrd=/home/tc/initrd --append='root=/dev/nbd0 netroot=nbd:'$NETBOOT_SERVER':'$disk':none:defaults,rw,noatime:--timeout=0,-p,-s,-systemd-mark  ip=dhcp ro systemd.debug-shell=1 net.ifnames=0 biosdevname=0 audit=0 selinux=0 quiet rd.luks=0 rd.lvm=0 rd.md=0 rd.dm=0 rd.skipfsck rd.info rd.fstab=0 quiet modprobe.blacklist=nouveau  console=tty0  console=ttyS0,115200n8 tftp=192.168.1.231  '$efi' reboot=acpi systemd.mask=NetworkManager systemd.mask=firewalld systemd.mask=firewall systemd.mask=docker systemd.mask=systemd-zram-setup@zram0 systemd.mask=systemd-zram-setup fsck.mode=skip rcutree.rcu_idle_gp_delay=1 mem_encrypt=off pci=nocrs,noearly audit=0 selinux=0 panic=30 fastboot ' 2>/dev/null
+	#kexec -l /home/tc/kernel --initrd=/home/tc/initrd --append='root=/dev/nbd0 netroot=nbd:'$NETBOOT_SERVER':'$disk':none:defaults,rw,noatime:--timeout=0,-p,-s,-systemd-mark  ip=dhcp ro systemd.debug-shell=1 net.ifnames=0 biosdevname=0 audit=0 selinux=0 quiet rd.luks=0 rd.lvm=0 rd.md=0 rd.dm=0 rd.skipfsck rd.info rd.fstab=0 quiet modprobe.blacklist=nouveau  console=tty0  console=ttyS0,115200n8 tftp='$NETBOOT_SERVER'  '$efi' reboot=acpi systemd.mask=NetworkManager systemd.mask=firewalld systemd.mask=firewall systemd.mask=docker systemd.mask=systemd-zram-setup@zram0 systemd.mask=systemd-zram-setup fsck.mode=skip rcutree.rcu_idle_gp_delay=1 mem_encrypt=off pci=nocrs,noearly audit=0 selinux=0 panic=30 fastboot ' 2>/dev/null
 #		rhgb
 #		overlay=/tmp/nbd1
 #		console=tty console=tty0 console=ttyS0,115200n8
@@ -145,7 +128,7 @@ elif [ $DISTRO = "fedora35" ] ; then
 	cmdline=$(echo 'root=/dev/nbd0 netroot=nbd:'$NETBOOT_SERVER':'$disk':none:defaults,rw,noatime:  rd.shell=1
 		modprobe.blacklist=nouveau
 		ip=dhcp
-		rw systemd.debug-shell=1   tftp=192.168.1.231
+		rw systemd.debug-shell=1   tftp='$NETBOOT_SERVER'
 		net.ifnames=0 biosdevname=0 audit=0 selinux=0
 		rd.luks=0 rd.lvm=0 rd.md=0 rd.dm=0 rd.skipfsck=0 rd.info=1 rd.fstab=0 fsck.mode=skip
 		'$efi' reboot=acpi panic=30

@@ -1,13 +1,14 @@
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 $(info $(ROOT_DIR))
 
-PXE_TFTP:=192.168.1.231
+PXE_TFTP:=10.200.2.6
 NETBOOT_IMG_PATH:=$(shell dirname `readlink -f $(ROOT_DIR)` | sed 's/\//\\\//g')
 $(info $(NETBOOT_IMG_PATH))
 #"/root/docker/pxe-manager/tftp"
 
 # retrieve the latest tinycore version available from their website.
 COREVER=$(shell curl 'http://www.tinycorelinux.net/downloads.html' | grep 'Version ' | awk -F'Version ' '{print $$2}' | awk '{print $$1}')
+$(info COREVER:$(COREVER))
 
 # extra packages to pre-install in our little distro
 EXTRA_PKGS="\
@@ -73,6 +74,7 @@ $(ROOT_DIR)/netbootcd/nbscript.sh:
 	> $(ROOT_DIR)/netbootcd/nbscript.sh
 
 $(ROOT_DIR)/boot/init.sh: $(ROOT_DIR)/src/init.sh
+	mkdir -p $(ROOT_DIR)/boot && \
 	cp $(ROOT_DIR)/src/init.sh /dev/shm && \
 	cat /dev/shm/init.sh \
 		| sed "s/__PXE_TFTP__/$(PXE_TFTP)/g" \
@@ -105,6 +107,8 @@ docker_build: $(ROOT_DIR)/netbootcd/Build_bootchain.sh $(ROOT_DIR)/netbootcd/nbs
 	chown -R $(UID):$(GID) $(ROOT_DIR)/boot
 
 $(ROOT_DIR)/boot/vmlinuz: $(ROOT_DIR)/netbootcd/Build_bootchain.sh $(ROOT_DIR)/.run_docker_image
+	export VERSION=$$(ls -1 netbootcd/CorePlus-*.iso | sed 's/.iso//' | awk -F'-' '{print $$(NF)}' | sort -V | tail -1) ;\
+	echo rsync -avpP $(ROOT_DIR)/boot/ $(ROOT_DIR)/boot-$$VERSION
 
 clean:
 	rm -rf \
